@@ -56,6 +56,17 @@
                                 <b>JADWAL LAPANGAN BUMI SARIWANGI</b>
                             </div>
                             <div class="card-body">
+                                @if ($errors->any())
+                                    <div class="alert alert-danger">
+                                        <strong>Oops! Ada kesalahan saat mengisi form:</strong>
+                                        <ul class="mb-0 mt-2">
+                                            @foreach ($errors->all() as $error)
+                                                <li>{{ $error }}</li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                @endif
+
                                 <form id="booking-form" action="{{ route('admin.bookings.store') }}" method="POST">
                                     @csrf
                                     <div class="mb-3">
@@ -85,9 +96,10 @@
                                 
                                     <div class="mb-3">
                                         <label for="total-harga" class="form-label">Harga</label>
-                                        <input type="text" id="total-harga" class="form-control" name="total_harga" readonly required>
+                                        <input type="text" id="total-harga-display" class="form-control" readonly>
+                                        <input type="hidden" id="total-harga" name="total_harga">
                                     </div>
-                                    <button type="submit" class="btn btn-primary w-100">BOOK NOW</button>
+                                    <button type="submit" id="pay-button" class="btn btn-primary w-100">BOOK NOW</button>
                                 </form>
                             </div>
                         </div>
@@ -108,10 +120,10 @@
 
 <script>
     document.getElementById('pay-button').addEventListener('click', function (e) {
-        e.preventDefault();
+        // e.preventDefault();
 
         const tanggal = document.getElementById('booking-date').value;
-        const waktu = document.getElementById('booking-time').value;
+        const waktu = document.getElementById('schedule-id').value;
 
         if (!tanggal || !waktu) {
             Swal.fire({
@@ -186,7 +198,13 @@
     document.getElementById('field-id').addEventListener('change', function () {
         const selectedOption = this.options[this.selectedIndex];
         const price = selectedOption.getAttribute('data-price');
-        document.getElementById('total-harga').value = price ? 'Rp ' + parseInt(price).toLocaleString() : '';
+
+        // Tampilkan versi "Rp xxx.xxx" ke user
+        document.getElementById('total-harga-display').value = price ? 'Rp ' + parseInt(price).toLocaleString() : '';
+
+        // Simpan nilai angka murni ke input hidden
+        document.getElementById('total-harga').value = price ? parseInt(price) : '';
     });
+
 </script>
 @endpush

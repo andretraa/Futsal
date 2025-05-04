@@ -41,7 +41,7 @@ class BookingController extends Controller
             'field_id' => 'required|exists:fields,id',
             'schedule_id' => 'required|exists:schedules,id',
             'tanggal_pemesanan' => 'required|date',
-            'total_harga' => 'required|numeric',
+            'total_harga' => 'required',
         ]);
 
         $schedule = Schedule::findOrFail($request->schedule_id);
