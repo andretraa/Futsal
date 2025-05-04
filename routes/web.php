@@ -36,8 +36,17 @@ Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
+Route::post('/get-snap-token', [BookingController::class, 'getSnapToken'])->name('get.snap.token');
 
-Route::post('/get-snap-token', [PaymentController::class, 'getSnapToken']);
+// Direct booking payment callbacks
+Route::get('/booking/{id}/finish', [BookingController::class, 'finishPayment'])->name('booking.finish');
+Route::get('/booking/{id}/error', [BookingController::class, 'errorPayment'])->name('booking.error');
+Route::get('/booking/{id}/pending', [BookingController::class, 'pendingPayment'])->name('booking.pending');
+
+// AJAX payment callbacks
+Route::get('/booking/finish/ajax', [BookingController::class, 'finishPaymentAjax'])->name('booking.finish.ajax');
+Route::get('/booking/error/ajax', [BookingController::class, 'errorPaymentAjax'])->name('booking.error.ajax');
+Route::get('/booking/pending/ajax', [BookingController::class, 'pendingPaymentAjax'])->name('booking.pending.ajax');
 
 Route::prefix('admin')->name('admin.')->group(function () {
 
@@ -46,5 +55,6 @@ Route::resource('fields', FieldController::class);
 Route::resource('schedules', ScheduleController::class);
 
 Route::resource('bookings', BookingController::class);
+// Di routes/web.php
 
 });

@@ -1,14 +1,19 @@
-{{-- resources/views/admin/bookings/pay.blade.php --}}
-@extends('admin.layouts.app')
+{{-- resources/views/booking/error.blade.php --}}
+@extends('layouts.app')
 
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">Pembayaran Booking</div>
+                <div class="card-header bg-danger text-white">Pembayaran Gagal</div>
 
                 <div class="card-body">
+                    <div class="alert alert-danger">
+                        <h4>Oops! Terjadi kesalahan dalam proses pembayaran.</h4>
+                        <p>Silakan coba lagi atau hubungi kami jika Anda terus mengalami masalah.</p>
+                    </div>
+
                     <h5>Detail Pemesanan:</h5>
                     <table class="table table-bordered">
                         <tr>
@@ -28,41 +33,20 @@
                             <td>{{ Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</td>
                         </tr>
                         <tr>
-                            <th>Total Harga</th>
-                            <td>Rp {{ number_format($booking->total_harga, 0, ',', '.') }}</td>
+                            <th>Status Pemesanan</th>
+                            <td>
+                                <span class="badge bg-danger">Gagal</span>
+                            </td>
                         </tr>
                     </table>
 
                     <div class="text-center mt-4">
-                        <button id="pay-button" class="btn btn-primary">Bayar Sekarang</button>
+                        <a href="{{ route('home') }}" class="btn btn-secondary mr-2">Kembali ke Beranda</a>
+                        <a href="{{ route('booking.create') }}" class="btn btn-primary">Coba Lagi</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 @endsection
-
-@push('scripts')
-<script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ config('midtrans.client_key') }}"></script>
-<script>
-    document.getElementById('pay-button').onclick = function() {
-        // Trigger snap popup
-        snap.pay('{{ $snapToken }}', {
-            onSuccess: function(result) {
-                window.location.href = '{{ route('booking.finish', $booking->id) }}';
-            },
-            onPending: function(result) {
-                window.location.href = '{{ route('booking.pending', $booking->id) }}';
-            },
-            onError: function(result) {
-                window.location.href = '{{ route('booking.error', $booking->id) }}';
-            },
-            onClose: function() {
-                alert('Anda menutup popup tanpa menyelesaikan pembayaran');
-            }
-        });
-    };
-</script>
-@endpush

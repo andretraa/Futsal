@@ -2,6 +2,23 @@
 
 @push('style')
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+    .payment-method-option {
+        padding: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .payment-method-option.selected {
+        border-color: #0d6efd;
+        background-color: #f0f7ff;
+    }
+    .payment-method-option img {
+        height: 30px;
+        margin-right: 10px;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -99,6 +116,52 @@
                                         <input type="text" id="total-harga-display" class="form-control" readonly>
                                         <input type="hidden" id="total-harga" name="total_harga">
                                     </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Metode Pembayaran</label>
+                                        <input type="hidden" id="payment-method" name="payment_method" value="">
+                                        
+                                        <div class="payment-method-option" data-method="credit_card">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ asset('assets/icons/credit-card.png') }}" alt="Credit Card">
+                                                <div>
+                                                    <strong>Kartu Kredit/Debit</strong>
+                                                    <div class="small text-muted">Visa, Mastercard, JCB</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="payment-method-option" data-method="bank_transfer">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ asset('assets/icons/bank.png') }}" alt="Bank Transfer">
+                                                <div>
+                                                    <strong>Transfer Bank</strong>
+                                                    <div class="small text-muted">BCA, Mandiri, BNI, BRI</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="payment-method-option" data-method="e_wallet">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ asset('assets/icons/e-wallet.png') }}" alt="E-Wallet">
+                                                <div>
+                                                    <strong>E-Wallet</strong>
+                                                    <div class="small text-muted">GoPay, OVO, DANA, LinkAja</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="payment-method-option" data-method="retail">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ asset('assets/icons/retail.png') }}" alt="Retail">
+                                                <div>
+                                                    <strong>Minimarket</strong>
+                                                    <div class="small text-muted">Alfamart, Indomaret</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
                                     <button type="submit" id="pay-button" class="btn btn-primary w-100">BOOK NOW</button>
                                 </form>
                             </div>
@@ -119,17 +182,43 @@
     data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
 
 <script>
+    // Payment method selection
+    document.querySelectorAll('.payment-method-option').forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            document.querySelectorAll('.payment-method-option').forEach(el => {
+                el.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Update hidden input with selected payment method
+            document.getElementById('payment-method').value = this.getAttribute('data-method');
+        });
+    });
+
     document.getElementById('pay-button').addEventListener('click', function (e) {
-        // e.preventDefault();
+        e.preventDefault();
 
         const tanggal = document.getElementById('booking-date').value;
         const waktu = document.getElementById('schedule-id').value;
+        const paymentMethod = document.getElementById('payment-method').value;
 
         if (!tanggal || !waktu) {
             Swal.fire({
                 icon: 'warning',
                 title: 'Oops...',
                 text: 'Silakan isi tanggal dan waktu terlebih dahulu.'
+            });
+            return;
+        }
+
+        if (!paymentMethod) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Oops...',
+                text: 'Silakan pilih metode pembayaran terlebih dahulu.'
             });
             return;
         }
@@ -158,7 +247,8 @@
             },
             body: JSON.stringify({
                 tanggal: tanggal,
-                waktu: waktu
+                waktu: waktu,
+                payment_method: paymentMethod
             })
         })
         .then(response => response.json())
@@ -171,6 +261,8 @@
                 onSuccess: function(result){
                     Swal.fire('Pembayaran Berhasil!', 'Terima kasih, booking Anda berhasil.', 'success');
                     console.log(result);
+                    // Submit the form after successful payment
+                    document.getElementById('booking-form').submit();
                 },
                 onPending: function(result){
                     Swal.fire('Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.', 'info');
@@ -194,6 +286,7 @@
             });
         });
     });
+    
     // Update harga otomatis saat lapang dipilih
     document.getElementById('field-id').addEventListener('change', function () {
         const selectedOption = this.options[this.selectedIndex];
@@ -205,6 +298,5 @@
         // Simpan nilai angka murni ke input hidden
         document.getElementById('total-harga').value = price ? parseInt(price) : '';
     });
-
 </script>
 @endpush

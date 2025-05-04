@@ -17,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+// Di routes/api.php
+Route::post('midtrans/notification', [App\Http\Controllers\MidtransNotificationController::class, 'handle'])->name('midtrans.notification');
