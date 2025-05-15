@@ -67,13 +67,36 @@ class BookingController extends Controller
         // Generate order ID yang unik
         $orderId = 'ORDER-' . $booking->id . '-' . time();
 
+        // Simpan order_id di tabel payments
+        Payment::create([
+            'booking_id' => $booking->id,
+            'order_id' => $orderId,
+            'transaction_status' => 'pending',
+            'transaction_time' => now(),
+            'gross_amount' => $booking->total_harga,
+            'payment_method' => $request->payment_method
+        ]);
+
+        // Return booking ID for the next step
+        return response()->json([
+            'success' => true,
+            'booking_id' => $booking->id
+        ]);
+    }
+
+    // Step 2: Create a new function to process payment
+    public function processPayment($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+        
         // Set enabled payment methods based on selection
-        $enabledPayments = $this->getEnabledPaymentMethods($request->payment_method);
+        $enabledPayments = $this->getEnabledPaymentMethods($booking->payment_method);
 
         // Buat transaksi Midtrans
         $params = [
             'transaction_details' => [
-                'order_id' => $orderId,
+                'order_id' => $payment->order_id,
                 'gross_amount' => (int)$booking->total_harga,
             ],
             'customer_details' => [
@@ -91,139 +114,143 @@ class BookingController extends Controller
             'enabled_payments' => $enabledPayments
         ];
         
-        // Add callbacks if routes are defined
-        if (Route::has('booking.finish') && Route::has('booking.error') && Route::has('booking.pending')) {
-            $params['callbacks'] = [
-                'finish' => route('booking.finish', $booking->id),
-                'error' => route('booking.error', $booking->id),
-                'pending' => route('booking.pending', $booking->id)
-            ];
-        }
+        // Add callbacks
+        $params['callbacks'] = [
+            'finish' => route('booking.finish', $booking->id),
+            'error' => route('booking.error', $booking->id),
+            'pending' => route('booking.pending', $booking->id)
+        ];
 
-        // Simpan order_id di tabel payments
-        Payment::create([
-            'booking_id' => $booking->id,
-            'order_id' => $orderId,
-            'transaction_status' => 'pending',
-            'transaction_time' => now(),
-            'gross_amount' => $booking->total_harga,
-            'payment_method' => $request->payment_method
-        ]);
-
+        // Get Snap Token
         $snapToken = Snap::getSnapToken($params);
-
-        return view('admin.bookings.pay', compact('snapToken', 'booking'));
+        
+        // Return view with snapToken
+        return view('booking.process', compact('snapToken', 'booking'));
     }
 
-    // Helper function to get enabled payment methods based on user selection
-    private function getEnabledPaymentMethods($paymentMethod)
+    // Step 3: Create callback functions for payment status updates
+    public function finishPayment($id)
     {
-        switch ($paymentMethod) {
+        $booking = Booking::findOrFail($id);
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+        
+        // Get transaction status from Midtrans
+        $status = $this->getTransactionStatus($payment->order_id);
+        
+        if ($status == 'settlement' || $status == 'capture') {
+            // Update booking status
+            $booking->status = 'confirmed';
+            $booking->save();
+            
+            // Update payment status
+            $payment->transaction_status = 'success';
+            $payment->save();
+            
+            return view('booking.finish', compact('booking', 'payment'));
+        }
+        
+        return redirect()->route('admin.bookings.index')
+            ->with('info', 'Status pembayaran: ' . $status);
+    }
+
+    public function errorPayment($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+        
+        // Update payment status
+        $payment->transaction_status = 'failed';
+        $payment->save();
+        
+        return redirect()->route('fields.index')
+            ->with('error', 'Pembayaran gagal! Silakan coba lagi.');
+    }
+
+    public function pendingPayment($id)
+    {
+        $booking = Booking::findOrFail($id);
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+        
+        // Update payment status if needed
+        $payment->transaction_status = 'pending';
+        $payment->save();
+        
+        return redirect()->route('fields.index')
+            ->with('info', 'Pembayaran dalam proses. Silakan selesaikan pembayaran.');
+    }
+
+    // Helper function to get transaction status from Midtrans
+    private function getTransactionStatus($orderId)
+    {
+        try {
+            $transaction = \Midtrans\Transaction::status($orderId);
+            return $transaction->transaction_status;
+        } catch (\Exception $e) {
+            return 'error';
+        }
+    }
+
+    // Helper function to map payment method to Midtrans enabled_payments
+    private function getEnabledPaymentMethods($method)
+    {
+        switch ($method) {
             case 'credit_card':
                 return ['credit_card'];
+            
             case 'bank_transfer':
-                return ['bca_va', 'bni_va', 'bri_va', 'mandiri_va', 'permata_va'];
+                return ['bank_transfer', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va'];
+                
             case 'e_wallet':
-                return ['gopay', 'shopeepay', 'qris'];
+                return ['gopay', 'shopeepay', 'qris', 'Dana', 'ovo'];
+                
             case 'retail':
                 return ['alfamart', 'indomaret'];
+                
             default:
-                return []; 
+                return ['credit_card', 'bank_transfer', 'gopay', 'shopeepay'];
         }
     }
 
-    // New endpoint for snap token generation via AJAX
-    public function getSnapToken(Request $request)
+    public function getPaymentToken($id)
     {
-        $request->validate([
-            'tanggal' => 'required|date',
-            'waktu' => 'required|exists:schedules,id',
-            'payment_method' => 'required|in:credit_card,bank_transfer,e_wallet,retail',
-        ]);
-
-        $schedule = Schedule::findOrFail($request->waktu);
-        $field = $schedule->field;
-
-        // Generate order ID yang unik
-        $orderId = 'ORDER-TEMP-' . Auth::id() . '-' . time();
-
+        $booking = Booking::findOrFail($id);
+        $payment = Payment::where('booking_id', $booking->id)->firstOrFail();
+        
         // Set enabled payment methods based on selection
-        $enabledPayments = $this->getEnabledPaymentMethods($request->payment_method);
+        $enabledPayments = $this->getEnabledPaymentMethods($booking->payment_method);
 
         // Buat transaksi Midtrans
         $params = [
             'transaction_details' => [
-                'order_id' => $orderId,
-                'gross_amount' => (int)$field->harga_perjam,
+                'order_id' => $payment->order_id,
+                'gross_amount' => (int)$booking->total_harga,
             ],
             'customer_details' => [
-                'first_name' => Auth::user()->name ?? 'Guest',
-                'email' => Auth::user()->email ?? 'guest@example.com',
+                'first_name' => $booking->user->name ?? 'Guest',
+                'email' => $booking->user->email ?? 'guest@example.com',
             ],
             'item_details' => [
                 [
-                    'id' => $field->id,
-                    'price' => (int)$field->harga_perjam,
+                    'id' => $booking->field->id,
+                    'price' => (int)$booking->total_harga,
                     'quantity' => 1,
-                    'name' => 'Sewa Lapangan ' . $field->nama
+                    'name' => 'Sewa Lapangan ' . $booking->field->nama
                 ]
             ],
             'enabled_payments' => $enabledPayments
         ];
         
-        // Add callbacks if routes are defined
-        if (Route::has('booking.finish.ajax') && Route::has('booking.error.ajax') && Route::has('booking.pending.ajax')) {
-            $params['callbacks'] = [
-                'finish' => route('booking.finish.ajax'),
-                'error' => route('booking.error.ajax'),
-                'pending' => route('booking.pending.ajax')
-            ];
-        }
+        // Add callbacks
+        $params['callbacks'] = [
+            'finish' => route('booking.finish', $booking->id),
+            'error' => route('booking.error', $booking->id),
+            'pending' => route('booking.pending', $booking->id)
+        ];
 
-        try {
-            $snapToken = Snap::getSnapToken($params);
-            return response()->json(['snapToken' => $snapToken]);
-        } catch (\Exception $e) {
-            return response()->json(['error' => $e->getMessage()], 500);
-        }
-    }
-    
-    // Fungsi callback untuk halaman setelah pembayaran
-    public function finishPayment($id)
-    {
-        $booking = Booking::with(['field', 'payments'])->findOrFail($id);
-        return view('booking.finish', compact('booking'));
-    }
-
-    public function errorPayment($id)
-    {
-        $booking = Booking::with(['field', 'payments'])->findOrFail($id);
-        return view('booking.error', compact('booking'));
-    }
-
-    public function pendingPayment($id)
-    {
-        $booking = Booking::with(['field', 'payments'])->findOrFail($id);
-        return view('booking.pending', compact('booking'));
-    }
-
-    // AJAX callback handlers
-    public function finishPaymentAjax(Request $request)
-    {
-        // Handle success via AJAX
-        return response()->json(['status' => 'success']);
-    }
-
-    public function errorPaymentAjax(Request $request)
-    {
-        // Handle error via AJAX
-        return response()->json(['status' => 'error']);
-    }
-
-    public function pendingPaymentAjax(Request $request)
-    {
-        // Handle pending via AJAX
-        return response()->json(['status' => 'pending']);
+        // Get Snap Token
+        $snapToken = Snap::getSnapToken($params);
+        
+        return response()->json(['snap_token' => $snapToken]);
     }
 
     public function edit(Booking $booking)

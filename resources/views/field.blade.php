@@ -162,7 +162,7 @@
                                         </div>
                                     </div>
                                     
-                                    <button type="submit" id="pay-button" class="btn btn-primary w-100">BOOK NOW</button>
+                                    <button type="submit" class="btn btn-primary w-100">BOOK NOW</button>
                                 </form>
                             </div>
                         </div>
@@ -174,7 +174,7 @@
 </section>
 @endsection
 
-@push('script')
+@push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script type="text/javascript"
@@ -198,94 +198,6 @@
         });
     });
 
-    document.getElementById('pay-button').addEventListener('click', function (e) {
-        e.preventDefault();
-
-        const tanggal = document.getElementById('booking-date').value;
-        const waktu = document.getElementById('schedule-id').value;
-        const paymentMethod = document.getElementById('payment-method').value;
-
-        if (!tanggal || !waktu) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Oops...',
-                text: 'Silakan isi tanggal dan waktu terlebih dahulu.'
-            });
-            return;
-        }
-
-        if (!paymentMethod) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Oops...',
-                text: 'Silakan pilih metode pembayaran terlebih dahulu.'
-            });
-            return;
-        }
-
-        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-
-        if (!isLoggedIn) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Harus Login!',
-                text: 'Silakan login terlebih dahulu untuk melakukan booking.',
-                confirmButtonText: 'Login Sekarang'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = "{{ route('login') }}";
-                }
-            });
-            return;
-        }
-
-        fetch("{{ url('/get-snap-token') }}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: JSON.stringify({
-                tanggal: tanggal,
-                waktu: waktu,
-                payment_method: paymentMethod
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (!data.snapToken) {
-                throw new Error("Snap token tidak ditemukan");
-            }
-
-            window.snap.pay(data.snapToken, {
-                onSuccess: function(result){
-                    Swal.fire('Pembayaran Berhasil!', 'Terima kasih, booking Anda berhasil.', 'success');
-                    console.log(result);
-                    // Submit the form after successful payment
-                    document.getElementById('booking-form').submit();
-                },
-                onPending: function(result){
-                    Swal.fire('Menunggu Pembayaran', 'Silakan selesaikan pembayaran Anda.', 'info');
-                    console.log(result);
-                },
-                onError: function(result){
-                    Swal.fire('Pembayaran Gagal', 'Silakan coba lagi atau hubungi admin.', 'error');
-                    console.log(result);
-                },
-                onClose: function(){
-                    Swal.fire('Pembayaran Belum Selesai', 'Kamu menutup pembayaran sebelum selesai.', 'question');
-                }
-            });
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Terjadi Kesalahan',
-                text: 'Gagal memproses permintaan.'
-            });
-        });
-    });
     
     // Update harga otomatis saat lapang dipilih
     document.getElementById('field-id').addEventListener('change', function () {
@@ -297,6 +209,142 @@
 
         // Simpan nilai angka murni ke input hidden
         document.getElementById('total-harga').value = price ? parseInt(price) : '';
+    });
+</script>
+
+<script>
+    $(document).ready(function() {
+        // Handle form submission
+        $('#booking-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading spinner
+            showLoadingOverlay('Memproses booking Anda...');
+            
+            // Submit form via AJAX
+            $.ajax({
+                url: $(this).attr('action'),
+                method: 'POST',
+                data: $(this).serialize(),
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        // Option 1: Redirect to payment process page
+                        window.location.href = "{{ route('admin.bookings.process', '') }}/" + response.booking_id;
+                        
+                        // OR Option 2: Show Modal (uncomment if you prefer modal instead of redirect)
+                        // showPaymentModal(response.booking_id);
+                    } else {
+                        hideLoadingOverlay();
+                        alert('Terjadi kesalahan! Silakan coba lagi.');
+                    }
+                },
+                error: function(xhr) {
+                    hideLoadingOverlay();
+                    
+                    // Show validation errors if any
+                    if (xhr.status === 422) {
+                        let errors = xhr.responseJSON.errors;
+                        let errorMessage = 'Terjadi kesalahan:\n';
+                        
+                        for (let field in errors) {
+                            errorMessage += errors[field][0] + '\n';
+                        }
+                        
+                        alert(errorMessage);
+                    } else {
+                        alert('Terjadi kesalahan sistem! Silakan coba lagi nanti.');
+                    }
+                }
+            });
+        });
+        
+        // Optional: if you want to use modal instead of redirect
+        function showPaymentModal(bookingId) {
+            // Create and show modal
+            let modal = `
+                <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Proses Pembayaran</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body text-center">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <h4>Mempersiapkan Gateway Pembayaran</h4>
+                                <p>Mohon tunggu sebentar...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            $('body').append(modal);
+            let paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+            paymentModal.show();
+            
+            // Load payment data
+            $.ajax({
+                url: "{{ route('admin.bookings.get-payment-token', '') }}/" + bookingId,
+                method: 'GET',
+                success: function(response) {
+                    if (response.snap_token) {
+                        // Hide spinner
+                        $('.modal-body .spinner-border').hide();
+                        $('.modal-body h4').text('Lanjutkan ke Pembayaran');
+                        $('.modal-body p').text('Klik tombol di bawah untuk melanjutkan ke pembayaran');
+                        
+                        // Add pay button
+                        $('.modal-body').append('<button id="modal-pay-button" class="btn btn-primary mt-3">Bayar Sekarang</button>');
+                        
+                        // Open Snap when button clicked
+                        $('#modal-pay-button').on('click', function() {
+                            snap.pay(response.snap_token, {
+                                onSuccess: function(result) {
+                                    window.location.href = '{{ route("booking.finish", "") }}/' + bookingId;
+                                },
+                                onPending: function(result) {
+                                    window.location.href = '{{ route("booking.pending", "") }}/' + bookingId;
+                                },
+                                onError: function(result) {
+                                    window.location.href = '{{ route("booking.error", "") }}/' + bookingId;
+                                },
+                                onClose: function() {
+                                    alert('Anda menutup popup pembayaran tanpa menyelesaikan transaksi!');
+                                }
+                            });
+                        });
+                    } else {
+                        $('.modal-body').html('<div class="alert alert-danger">Gagal memuat token pembayaran. Silakan coba lagi.</div>');
+                    }
+                },
+                error: function() {
+                    $('.modal-body').html('<div class="alert alert-danger">Terjadi kesalahan! Silakan coba lagi.</div>');
+                }
+            });
+        }
+        
+        // Helper functions for loading overlay
+        function showLoadingOverlay(message) {
+            let overlay = `
+                <div id="loading-overlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; justify-content: center; align-items: center;">
+                    <div class="bg-white p-4 rounded text-center">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div>${message || 'Loading...'}</div>
+                    </div>
+                </div>
+            `;
+            $('body').append(overlay);
+        }
+        
+        function hideLoadingOverlay() {
+            $('#loading-overlay').remove();
+        }
     });
 </script>
 @endpush

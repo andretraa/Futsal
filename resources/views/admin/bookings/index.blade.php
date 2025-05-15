@@ -37,7 +37,22 @@
                             <td>{{ $booking->field->nama ?? '-' }}</td>
                             <td>{{ \Carbon\Carbon::parse($booking->tanggal_pemesanan)->translatedFormat('d F Y') }}</td>
                             <td>{{ \Carbon\Carbon::parse($booking->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($booking->end_time)->format('H:i') }}</td>
-                            <td>{{ ucfirst($booking->status) }}</td>
+                            <td>
+                                @php
+                                    $status = ucfirst($booking->status);
+                                    $styles = [
+                                        'Pending' => 'background-color: #fef9c3; color: #92400e;',   // kuning muda
+                                        'Confirmed' => 'background-color: #bbf7d0; color: #166534;', // hijau muda
+                                        'Failed' => 'background-color: #fecaca; color: #991b1b;', // merah muda
+                                    ];
+                                    $style = $styles[$status] ?? 'background-color: #e5e7eb; color: #374151;'; // abu
+                                @endphp
+
+                                <span style="padding: 4px 8px; font-size: 0.875rem; font-weight: 500; border-radius: 0.375rem; {{ $style }}">
+                                    {{ $status }}
+                                </span>
+                            </td>
+
                             <td>Rp {{ number_format($booking->total_harga, 0, ',', '.') }}</td>
                             <td>
                                 <a href="{{ route('admin.bookings.edit', $booking->id) }}" class="btn btn-sm btn-warning">
