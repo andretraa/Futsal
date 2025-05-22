@@ -23,4 +23,14 @@ class Schedule extends Model
     {
         return $this->belongsTo(Field::class);
     }
+
+    public function bookings()
+    {
+        return $this->hasOne(Booking::class);
+    }
+
+    public function dashboard()
+    {
+        return $this->hasMany(Dashboard::class);
+    }
 }

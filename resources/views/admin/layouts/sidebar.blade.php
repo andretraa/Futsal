@@ -28,7 +28,7 @@
           data-accordion="false"
         >
           <li class="nav-item">
-            <a href="admin/bookings" class="nav-link">
+            <a href="/admin/dashboard" class="nav-link">
               <i class="nav-icon bi bi-palette"></i>
               <p>Dashboard</p>
             </a>

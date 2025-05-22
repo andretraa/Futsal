@@ -8,6 +8,7 @@ use App\Http\Controllers\FieldController;
 use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Frontend\FieldController as FrontendFieldController;
+use App\Http\Controllers\Admin\DashboardController;
 
 
 Route::get('/', function () {
@@ -27,9 +28,14 @@ Route::get('/fasilitas', function () {
     
 });
 
-Route::get('/dashboard', function () {
-    return view('admin.dashboard.index');
+// Route::get('/dashboard', function () {
+//     return view('admin.dashboard.index');
+// });
+
+Route::prefix('admin')->middleware(['auth'])->group(function () {
+Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
 });
+
 
 Auth::routes();
 
@@ -53,6 +59,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     
     Route::resource('schedules', ScheduleController::class);
     
+    
     Route::resource('bookings', BookingController::class);
     // Di routes/web.php
     Route::resource('fields', FieldController::class);   
@@ -74,3 +81,5 @@ Route::get('/booking/error/{id}', [App\Http\Controllers\BookingController::class
     ->name('booking.error');
 Route::get('/booking/pending/{id}', [App\Http\Controllers\BookingController::class, 'pendingPayment'])
     ->name('booking.pending');
+
+Route::post('/check-schedule-availability', [ScheduleController::class, 'checkAvailability'])->name('check.schedule.availability');

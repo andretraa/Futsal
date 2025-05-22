@@ -25,4 +25,9 @@ class Field extends Model
     {
         return $this->hasMany(Schedule::class);
     }
+
+    public function dashboard()
+    {
+        return $this->hasMany(Dashboard::class);
+    }
 }

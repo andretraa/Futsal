@@ -4,8 +4,17 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
+    /* Define the CSS variables for colors */
+    :root {
+        --primary: #2563eb;          /* Blue color for primary elements */
+        --primary-hover: #1d4ed8;    /* Darker blue for hover states */
+        --border-color: #e2e8f0;     /* Light gray for borders */
+    }
     
-    
+    body {
+        padding-top: 80px;
+    }
+
     .card {
         border: none;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
@@ -155,7 +164,7 @@
                     @foreach ($fields as $data)
                         <h1 class="main-heading">{{ $data->nama }}</h1>
                         <div class="price-badge">
-                            <i class="fas fa-tag me-2"></i>Rp. {{ number_format($data->harga, 0, ',', '.') }}
+                            <i class="fas fa-tag me-2"></i>Rp. {{ number_format($data->harga_perjam, 0, ',', '.') }}
                         </div>
                         
                         <div id="fieldCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -211,13 +220,19 @@
                         
                         <div class="mb-4">
                             <h4><i class="fas fa-map-marker-alt me-2"></i>Lokasi</h4>
-                            <p class="mb-2"><i class="fas fa-location-dot me-2"></i>Jl. Sariwangi No. 123, Bandung</p>
+                            <p class="mb-2"><i class="fas fa-location-dot me-2"></i>Jl. Sariwangi Selatan, Sariwangi, Kec. Parongpong, Kabupaten Bandung Barat, Jawa Barat 40559</p>
                             <div class="ratio ratio-16x9">
-                                <!-- placeholder for map -->
-                                <div class="bg-light d-flex align-items-center justify-content-center">
-                                    <p class="text-muted">Peta lokasi lapangan</p>
-                                </div>
-                            </div>
+                            <iframe 
+                                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d63394.66770697693!2d107.54496340406623!3d-6.861060099999998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e68e41c671886c5%3A0xf2b27c16d811eb7d!2sGOR%20Bumi%20Sariwangi%201!5e0!3m2!1sid!2sid!4v1715763123456!5m2!1sid!2sid" 
+                                width="600" 
+                                height="450" 
+                                style="border:0;" 
+                                allowfullscreen="" 
+                                loading="lazy" 
+                                referrerpolicy="no-referrer-when-downgrade">
+                            </iframe>
+                        </div>
+
                         </div>
                     @endforeach
                 </div>
@@ -276,50 +291,53 @@
                                 </div>
                             </div>
 
-                            <div class="mb-4">
-                                <label class="form-label"><i class="fas fa-credit-card me-2"></i>Metode Pembayaran</label>
-                                <input type="hidden" id="payment-method" name="payment_method" value="">
-                                
-                                <div class="payment-method-option" data-method="credit_card">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ asset('assets/icons/credit-card.png') }}" alt="Credit Card">
-                                        <div>
-                                            <strong>Kartu Kredit/Debit</strong>
-                                            <div class="small text-muted">Visa, Mastercard, JCB</div>
+                             <div class="mb-4">
+                                    <label class="form-label">
+                                        <i class="fas fa-credit-card me-2"></i>Metode Pembayaran
+                                    </label>
+                                    <input type="hidden" id="payment-method" name="payment_method" value="">
+
+                                    <div class="payment-method-option" data-method="credit_card">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="fas fa-credit-card text-primary fa-lg"></i>
+                                            <div>
+                                                <strong>Kartu Kredit/Debit</strong>
+                                                <div class="small text-muted">Visa, Mastercard, JCB</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-method-option" data-method="bank_transfer">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="fas fa-university text-success fa-lg"></i>
+                                            <div>
+                                                <strong>Transfer Bank</strong>
+                                                <div class="small text-muted">BCA, Mandiri, BNI, BRI</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-method-option" data-method="e_wallet">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="fas fa-wallet text-warning fa-lg"></i>
+                                            <div>
+                                                <strong>E-Wallet</strong>
+                                                <div class="small text-muted">GoPay, OVO, DANA, LinkAja</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-method-option" data-method="retail">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <i class="fas fa-store text-danger fa-lg"></i>
+                                            <div>
+                                                <strong>Minimarket</strong>
+                                                <div class="small text-muted">Alfamart, Indomaret</div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <div class="payment-method-option" data-method="bank_transfer">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ asset('assets/icons/bank.png') }}" alt="Bank Transfer">
-                                        <div>
-                                            <strong>Transfer Bank</strong>
-                                            <div class="small text-muted">BCA, Mandiri, BNI, BRI</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="payment-method-option" data-method="e_wallet">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ asset('assets/icons/e-wallet.png') }}" alt="E-Wallet">
-                                        <div>
-                                            <strong>E-Wallet</strong>
-                                            <div class="small text-muted">GoPay, OVO, DANA, LinkAja</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="payment-method-option" data-method="retail">
-                                    <div class="d-flex align-items-center">
-                                        <img src="{{ asset('assets/icons/retail.png') }}" alt="Retail">
-                                        <div>
-                                            <strong>Minimarket</strong>
-                                            <div class="small text-muted">Alfamart, Indomaret</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+
                             
                             <button type="submit" class="btn btn-primary w-100">
                                 <i class="fas fa-check-circle me-2"></i>PESAN SEKARANG

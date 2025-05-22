@@ -126,10 +126,10 @@
         <div class="row justify-content-center">
             <div class="col-lg-8">
                 <!-- Logo -->
-                <div class="logo-container">
-                    <img src="/api/placeholder/200/60" alt="SportVenue Logo" class="logo">
-                </div>
-                
+                <div class="logo-container d-flex justify-content-center align-items-center" style="height: 60px;">
+                <i class="fas fa-futbol fa-2x text-primary me-2"></i>
+                <span class="fw-bold fs-5">Bumi Sariwangi</span>
+                </div>      
                 <div class="card success-card">
                     <div class="card-header text-center">
                         <i class="fas fa-check-circle me-2"></i> Pembayaran Berhasil

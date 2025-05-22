@@ -66,4 +66,18 @@ class ScheduleController extends Controller
         $schedule->delete();
         return redirect()->route('admin.schedules.index')->with('success', 'Schedule deleted successfully.');
     }
+
+    public function checkAvailability(Request $request)
+{
+    $fieldId = $request->input('field_id');
+    $bookingDate = $request->input('booking_date');
+
+    // Lakukan pengecekan jadwal di database
+    // Misalnya:
+    $availableTimes = Schedule::where('field_id', $fieldId)
+                              ->whereDate('booking_date', $bookingDate)
+                              ->get();
+
+    return response()->json($availableTimes);
+}
 }

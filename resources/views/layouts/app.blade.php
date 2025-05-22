@@ -52,9 +52,6 @@
           <li class="nav-item">
             <a href="/field" class="nav-link {{ Request::is('field') ? 'active fw-bold text-success' : 'text-white' }}">Field</a>
           </li>
-          <li class="nav-item">
-            <a href="/fasilitas" class="nav-link {{ Request::is('fasilitas') ? 'active fw-bold text-success' : 'text-white' }}">Facilities</a>
-          </li>
           @auth
           <li class="nav-item">
             <span class="nav-link fw-semibold text-success">{{ auth()->user()->name }}</span>
