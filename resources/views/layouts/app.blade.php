@@ -90,7 +90,7 @@
     @yield('content')
   </main>
 
-  <footer id="footer" class="footer dark-background">
+  {{-- <footer id="footer" class="footer dark-background">
 
     <div class="container footer-top">
       <div class="row gy-4">
@@ -154,7 +154,7 @@
       </div>
     </div>
 
-  </footer>
+  </footer> --}}
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>

@@ -82,4 +82,4 @@ Route::get('/booking/error/{id}', [App\Http\Controllers\BookingController::class
 Route::get('/booking/pending/{id}', [App\Http\Controllers\BookingController::class, 'pendingPayment'])
     ->name('booking.pending');
 
-Route::post('/check-schedule-availability', [ScheduleController::class, 'checkAvailability'])->name('check.schedule.availability');
+Route::get('/schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');

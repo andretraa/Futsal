@@ -33,84 +33,86 @@ class BookingController extends Controller
     public function create()
     {
         $fields = Field::all();
-        $schedules = Schedule::with('field')->where('is_available', true)->get();
-        return view('admin.bookings.create', compact('fields', 'schedules'));
+        // $schedules = Schedule::with('field')->where('is_available', true)->get(); // No longer needed here as schedules will be loaded via AJAX
+        return view('admin.bookings.create', compact('fields'));
     }
 
     public function store(Request $request)
-{
-    $request->validate([
-        'field_id' => 'required|exists:fields,id',
-        'schedule_id' => 'required|exists:schedules,id',
-        'tanggal_pemesanan' => 'required|date',
-        'total_harga' => 'required',
-        'payment_method' => 'required|in:credit_card,bank_transfer,e_wallet,retail',
-    ]);
+    {
+        $request->validate([
+            'field_id' => 'required|exists:fields,id',
+            'schedule_id' => 'required|exists:schedules,id',
+            'tanggal_pemesanan' => 'required|date',
+            'total_harga' => 'required',
+            'payment_method' => 'required|in:credit_card,bank_transfer,e_wallet,retail',
+        ]);
 
-    $schedule = Schedule::findOrFail($request->schedule_id);
+        $schedule = Schedule::findOrFail($request->schedule_id);
 
-    if (!$schedule->is_available) {
-        return redirect()->back()->with('error', 'Schedule is not available.');
-    }
-
-    $start_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->start_time);
-    $end_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->end_time);
-
-    // Periksa apakah jadwal sudah dibooking pada tanggal yang sama
-    $existingBooking = Booking::where('field_id', $request->field_id)
-        ->where('tanggal_pemesanan', $request->tanggal_pemesanan)
-        ->where(function($query) use ($start_time, $end_time) {
-            // Cek apakah ada booking yang jadwalnya bentrok
-            // (booking lain dimulai sebelum booking ini selesai dan selesai setelah booking ini dimulai)
-            $query->where(function($q) use ($start_time, $end_time) {
-                $q->where('start_time', '<', $end_time)
-                  ->where('end_time', '>', $start_time);
-            });
-        })
-        ->where('status', '!=', 'cancelled') // Abaikan booking yang sudah dibatalkan
-        ->exists();
-
-    if ($existingBooking) {
-        if ($request->wantsJson()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'This schedule is already booked for the selected date and time.'
-            ], 422);
+        if (!$schedule->is_available) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jadwal ini tidak tersedia untuk booking.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Jadwal ini tidak tersedia untuk booking.');
         }
-        return redirect()->back()->with('error', 'This schedule is already booked for the selected date and time.');
+
+        $start_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->start_time);
+        $end_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->end_time);
+
+        // Periksa apakah jadwal sudah dibooking pada tanggal yang sama dan statusnya bukan 'cancelled'
+        $existingBooking = Booking::where('field_id', $request->field_id)
+            ->where('tanggal_pemesanan', $request->tanggal_pemesanan)
+            ->where(function($query) use ($start_time, $end_time) {
+                $query->where('start_time', '<', $end_time)
+                      ->where('end_time', '>', $start_time);
+            })
+            ->whereIn('status', ['pending', 'confirmed']) // Periksa booking yang masih aktif
+            ->exists();
+
+        if ($existingBooking) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Jadwal ini sudah dibooking pada tanggal dan waktu yang dipilih.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Jadwal ini sudah dibooking pada tanggal dan waktu yang dipilih.');
+        }
+
+        // Buat booking terlebih dahulu dengan status pending
+        $booking = Booking::create([
+            'user_id' => Auth::id(),
+            'field_id' => $request->field_id,
+            'tanggal_pemesanan' => $request->tanggal_pemesanan,
+            'start_time' => $start_time,
+            'end_time' => $end_time,
+            'status' => 'pending',
+            'total_harga' => $request->total_harga,
+            'payment_method' => $request->payment_method,
+        ]);
+
+        // Generate order ID yang unik
+        $orderId = 'ORDER-' . $booking->id . '-' . time();
+
+        // Simpan order_id di tabel payments
+        Payment::create([
+            'booking_id' => $booking->id,
+            'order_id' => $orderId,
+            'transaction_status' => 'pending',
+            'transaction_time' => now(),
+            'gross_amount' => $booking->total_harga,
+            'payment_method' => $request->payment_method
+        ]);
+
+        // Return booking ID for the next step
+        return response()->json([
+            'success' => true,
+            'booking_id' => $booking->id
+        ]);
     }
-
-    // Buat booking terlebih dahulu dengan status pending
-    $booking = Booking::create([
-        'user_id' => Auth::id(),
-        'field_id' => $request->field_id,
-        'tanggal_pemesanan' => $request->tanggal_pemesanan,
-        'start_time' => $start_time,
-        'end_time' => $end_time,
-        'status' => 'pending',
-        'total_harga' => $request->total_harga,
-        'payment_method' => $request->payment_method,
-    ]);
-
-    // Generate order ID yang unik
-    $orderId = 'ORDER-' . $booking->id . '-' . time();
-
-    // Simpan order_id di tabel payments
-    Payment::create([
-        'booking_id' => $booking->id,
-        'order_id' => $orderId,
-        'transaction_status' => 'pending',
-        'transaction_time' => now(),
-        'gross_amount' => $booking->total_harga,
-        'payment_method' => $request->payment_method
-    ]);
-
-    // Return booking ID for the next step
-    return response()->json([
-        'success' => true,
-        'booking_id' => $booking->id
-    ]);
-}
     // Step 2: Create a new function to process payment
     public function processPayment($id)
     {
@@ -208,19 +210,19 @@ class BookingController extends Controller
 
     // Helper function to get transaction status from Midtrans
     private function getTransactionStatus($orderId)
-{
-    try {
-        $transaction = \Midtrans\Transaction::status($orderId);
+    {
+        try {
+            $transaction = \Midtrans\Transaction::status($orderId);
 
-        if (is_object($transaction) && property_exists($transaction, 'transaction_status')) {
-            return $transaction->transaction_status;
+            if (is_object($transaction) && property_exists($transaction, 'transaction_status')) {
+                return $transaction->transaction_status;
+            }
+
+            return 'unknown'; // fallback jika status tidak ditemukan
+        } catch (\Exception $e) {
+            return 'error';
         }
-
-        return 'unknown'; // fallback jika status tidak ditemukan
-    } catch (\Exception $e) {
-        return 'error';
     }
-}
 
     // Helper function to map payment method to Midtrans enabled_payments
     private function getEnabledPaymentMethods($method)
@@ -233,7 +235,7 @@ class BookingController extends Controller
                 return ['bank_transfer', 'bca_va', 'bni_va', 'bri_va', 'mandiri_va'];
                 
             case 'e_wallet':
-                return ['gopay', 'shopeepay', 'qris', 'Dana', 'ovo'];
+                return ['gopay', 'shopeepay', 'qris', 'Dana', 'ovo']; // Note: 'Dana' and 'ovo' might need specific Midtrans identifiers or only work via QRIS/specific integrations
                 
             case 'retail':
                 return ['alfamart', 'indomaret'];

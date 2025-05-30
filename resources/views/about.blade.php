@@ -2,6 +2,12 @@
 
 @section('content')
 
+<style>
+    .text-justify {
+    text-align: justify;
+}
+
+</style>
 <section id="stats" class="stats section light-background">
 
     <div class="container" data-aos="fade-up" data-aos-delay="100">
@@ -13,31 +19,26 @@
                     <!-- Kolom Kiri -->
                     <div class="col-lg-6" data-aos="fade-up" data-aos-delay="100">
                         <h3 class="mb-4">Gor Bumi Sariwangi 1</h3>
-                        <img src="assets/img/about.jpg" class="img-fluid rounded-4 mb-4" alt="About Image">
-                        <p>Ut fugiat ut sunt quia veniam. Voluptate perferendis perspiciatis quod nisi et. Placeat debitis quia recusandae odit et consequatur voluptatem. Dignissimos pariatur consectetur fugiat voluptas ea.</p>
-                        <p>Temporibus nihil enim deserunt sed ea. Provident sit expedita aut cupiditate nihil vitae quo officia vel. Blanditiis eligendi possimus et in cum. Quidem eos ut sint rem veniam qui. Ut ut repellendus nobis tempore doloribus debitis explicabo similique sit. Accusantium sed ut omnis beatae neque deleniti repellendus.</p>
+                        <img src="assets/img/parkir.jpeg" class="img-fluid rounded-3 mb-3" alt="About Image">
+                        <p class="text-justify">GOR ini merupakan bagian dari fasilitas umum di Komplek Bumi Sariwangi 1, yang juga dilengkapi dengan masjid, supermarket, dan sistem keamanan one gate system. Lokasinya strategis, hanya sekitar 
+                        15 menit dari pusat perbelanjaan Paris Van Java (PVJ), 5 menit dari Politeknik Negeri Bandung (Polban), dan 18 menit dari pintu Tol Pasteur .
+                    <!-- Kolom Kanan --></p>
+                        <p class="text-justify">Selain fasilitas olahraga, Komplek Bumi Sariwangi 1 juga menawarkan lingkungan yang nyaman dengan udara sejuk khas Bandung Barat. Fasilitas lainnya mencakup CCTV, keamanan 24 jam, dan akses mudah ke berbagai fasilitas umum seperti klinik, apotek, dan pusat perbelanjaan .</p>
                     </div>
-        
-                    <!-- Kolom Kanan -->
-                    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="250">
+         
+                    <div class="col-lg-6" data-aos="fade-up" data-aos-delay="200">
                         <div class="content ps-0 ps-lg-5">
-                            <p class="fst-italic">
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+                            <p class="text-justify">
+                             GOR Bumi Sariwangi 1 adalah fasilitas olahraga yang terletak di dalam Komplek Perumahan Bumi Sariwangi 1, Sariwangi, Parongpong, Kabupaten Bandung Barat. Tempat ini menyediakan berbagai fasilitas olahraga, termasuk lapangan futsal yang dapat digunakan oleh penghuni komplek maupun masyarakat umum.  
                             </p>
-                            <ul class="list-unstyled">
-                                <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat.</li>
-                                <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Duis aute irure dolor in reprehenderit in voluptate velit.</li>
-                                <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate trideta storacalaperda mastiro dolore eu fugiat nulla pariatur.</li>
-                            </ul>
-                            <p>
-                                Ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate
-                                velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident.
+                            <p class="text-justify">
+                                Bumi Sariwangi Hall and Sport Centre, yang merupakan bagian dari fasilitas ini, beroperasi setiap hari dari pukul 08.00 hingga 22.00 WIB . Namun, untuk penggunaan lapangan futsal secara spesifik, 
+                                disarankan untuk menghubungi pengelola terlebih dahulu guna memastikan ketersediaan dan jadwal.
                             </p>
         
                             <!-- Gambar dengan Play Button -->
                             <div class="position-relative mt-4">
-                                <img src="assets/img/about-2.jpg" class="img-fluid rounded-4" alt="About Image 2">
-                                <a href="https://www.youtube.com/watch?v=Y7f98aduVJ8" class="glightbox pulsating-play-btn position-absolute top-50 start-50 translate-middle"></a>
+                                <img src="assets/img/lapang.jpg" class="img-fluid rounded-4" alt="About Image 2">
                             </div>
                         </div>
                     </div>

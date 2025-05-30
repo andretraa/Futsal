@@ -261,7 +261,7 @@
                                 <label for="booking-date" class="form-label"><i class="fas fa-calendar me-2"></i>Tanggal Booking</label>
                                 <input type="date" class="form-control" id="booking-date" name="tanggal_pemesanan" required>
                             </div>
-                        
+                            
                             <div class="mb-3">
                                 <label for="field-id" class="form-label"><i class="fas fa-futbol me-2"></i>Pilih Lapang</label>
                                 <select id="field-id" class="form-select" name="field_id" required>
@@ -271,17 +271,15 @@
                                     @endforeach
                                 </select>
                             </div>
-                        
+                            
                             <div class="mb-3">
                                 <label for="schedule-id" class="form-label"><i class="fas fa-clock me-2"></i>Pilih Jam</label>
                                 <select id="schedule-id" class="form-select" name="schedule_id" required>
                                     <option value="">-- Pilih Jam --</option>
-                                    @foreach ($schedules as $data)
-                                        <option value="{{ $data->id }}">{{ $data->start_time }} - {{ $data->end_time }}</option>
-                                    @endforeach
+                                    {{-- Opsi jadwal akan dimuat di sini via AJAX --}}
                                 </select>
                             </div>
-                        
+                            
                             <div class="mb-4">
                                 <label for="total-harga" class="form-label"><i class="fas fa-money-bill me-2"></i>Total Harga</label>
                                 <div class="input-group">
@@ -352,46 +350,120 @@
 @endsection
 
 @push('scripts')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {{-- jQuery dimuat pertama --}}
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script type="text/javascript"
     src="https://app.sandbox.midtrans.com/snap/snap.js"
     data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
 
 <script>
-    // Payment method selection
-    document.querySelectorAll('.payment-method-option').forEach(option => {
-        option.addEventListener('click', function() {
-            // Remove selected class from all options
-            document.querySelectorAll('.payment-method-option').forEach(el => {
-                el.classList.remove('selected');
-            });
-            
-            // Add selected class to clicked option
-            this.classList.add('selected');
-            
-            // Update hidden input with selected payment method
-            document.getElementById('payment-method').value = this.getAttribute('data-method');
-        });
-    });
-
-    
-    // Update harga otomatis saat lapang dipilih
-    document.getElementById('field-id').addEventListener('change', function () {
-        const selectedOption = this.options[this.selectedIndex];
-        const price = selectedOption.getAttribute('data-price');
-
-        // Tampilkan versi "Rp xxx.xxx" ke user
-        document.getElementById('total-harga-display').value = price ? parseInt(price).toLocaleString('id-ID') : '';
-
-        // Simpan nilai angka murni ke input hidden
-        document.getElementById('total-harga').value = price ? parseInt(price) : '';
-    });
-</script>
-
-<script>
     $(document).ready(function() {
+        // Payment method selection
+        document.querySelectorAll('.payment-method-option').forEach(option => {
+            option.addEventListener('click', function() {
+                // Remove selected class from all options
+                document.querySelectorAll('.payment-method-option').forEach(el => {
+                    el.classList.remove('selected');
+                });
+                
+                // Add selected class to clicked option
+                this.classList.add('selected');
+                
+                // Update hidden input with selected payment method
+                document.getElementById('payment-method').value = this.getAttribute('data-method');
+            });
+        });
+
+        // Update harga otomatis saat lapang dipilih
+        document.getElementById('field-id').addEventListener('change', function () {
+            const selectedOption = this.options[this.selectedIndex];
+            const price = selectedOption.getAttribute('data-price');
+
+            // Tampilkan versi "Rp xxx.xxx" ke user
+            document.getElementById('total-harga-display').value = price ? parseInt(price).toLocaleString('id-ID') : '';
+
+            // Simpan nilai angka murni ke input hidden
+            document.getElementById('total-harga').value = price ? parseInt(price) : '';
+            
+            // Panggil fungsi untuk memuat jadwal saat lapangan berubah
+            loadAvailableSchedules();
+        });
+
+        // Panggil fungsi untuk memuat jadwal saat tanggal berubah
+        document.getElementById('booking-date').addEventListener('change', function() {
+            loadAvailableSchedules();
+        });
+
+        // Fungsi untuk memuat jadwal yang tersedia
+        function loadAvailableSchedules() {
+            const fieldId = document.getElementById('field-id').value;
+            const bookingDate = document.getElementById('booking-date').value;
+            const scheduleSelect = document.getElementById('schedule-id');
+
+            // Reset schedule select dan tambahkan opsi default
+            scheduleSelect.innerHTML = '<option value="">-- Pilih Jam --</option>';
+            scheduleSelect.disabled = true; // Nonaktifkan dropdown saat memuat
+
+            if (!fieldId || !bookingDate) {
+                console.log("Field ID or Booking Date is empty, not sending AJAX request.");
+                // Jika salah satu input kosong, aktifkan kembali dropdown dan tidak tampilkan alert "Tidak ada jadwal"
+                scheduleSelect.disabled = false; 
+                return; 
+            }
+
+            console.log("Sending AJAX for schedules with field_id:", fieldId, "and booking_date:", bookingDate);
+
+            // Tampilkan loading overlay saat AJAX dimulai
+            showLoadingOverlay('Memuat jadwal...');
+
+            $.ajax({
+                url: '{{ route("schedules.checkAvailability") }}',
+                method: 'GET',
+                data: {
+                    field_id: fieldId,
+                    booking_date: bookingDate
+                },
+                success: function(response) {
+                    hideLoadingOverlay(); // Sembunyikan loading overlay
+                    console.log("Response from server for schedules:", response); 
+                    scheduleSelect.disabled = false; // Aktifkan dropdown kembali
+
+                    if (response.success && response.availableSchedules && response.availableSchedules.length > 0) {
+                        response.availableSchedules.forEach(schedule => {
+                            console.log("Processing schedule:", schedule); 
+                            const option = document.createElement('option');
+                            option.value = schedule.id;
+                            option.textContent = `${schedule.start_time.substring(0, 5)} - ${schedule.end_time.substring(0, 5)}`; 
+
+                            if (schedule.is_booked) {
+                                option.disabled = true;
+                                option.textContent += ' (Terisi)'; 
+                            }
+                            scheduleSelect.appendChild(option);
+                        });
+                    } else {
+                        // Tampilkan SweetAlert hanya jika tidak ada jadwal yang tersedia atau success: false
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Tidak Ada Jadwal',
+                            text: response.message || 'Tidak ada jadwal tersedia untuk tanggal dan lapangan yang dipilih.'
+                        });
+                    }
+                },
+                error: function(xhr) {
+                    hideLoadingOverlay(); // Sembunyikan loading overlay
+                    console.error('Error fetching schedules (AJAX request failed):', xhr);
+                    scheduleSelect.disabled = false; 
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Gagal memuat jadwal. Silakan coba lagi. (Error Code: ' + xhr.status + ')'
+                    });
+                }
+            });
+        }
+
         // Add datepicker minimum date (today)
         var today = new Date().toISOString().split('T')[0];
         document.getElementById('booking-date').setAttribute('min', today);
@@ -420,6 +492,7 @@
                 data: $(this).serialize(),
                 dataType: 'json',
                 success: function(response) {
+                    hideLoadingOverlay(); // Sembunyikan loading overlay setelah respons
                     if (response.success) {
                         // Option 1: Redirect to payment process page
                         window.location.href = "{{ route('admin.bookings.process', '') }}/" + response.booking_id;
@@ -427,16 +500,15 @@
                         // OR Option 2: Show Modal (uncomment if you prefer modal instead of redirect)
                         // showPaymentModal(response.booking_id);
                     } else {
-                        hideLoadingOverlay();
                         Swal.fire({
                             icon: 'error',
                             title: 'Oops!',
-                            text: 'Terjadi kesalahan! Silakan coba lagi.'
+                            text: response.message || 'Terjadi kesalahan! Silakan coba lagi.'
                         });
                     }
                 },
                 error: function(xhr) {
-                    hideLoadingOverlay();
+                    hideLoadingOverlay(); // Sembunyikan loading overlay jika ada error
                     
                     // Show validation errors if any
                     if (xhr.status === 422) {

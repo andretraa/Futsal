@@ -17,7 +17,7 @@
       margin: 0;
       padding: 0;
       height: 100vh;
-      background: linear-gradient(135deg, #667eea, #764ba2);
+      background: url('assets/img/depan.jpeg') no-repeat center center/cover;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -28,11 +28,11 @@
       max-width: 400px;
       padding: 40px;
       border-radius: 20px;
-      background: rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(15px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      background: rgba(255, 255, 255, 0.1); /* Semi transparan */
+      backdrop-filter: blur(15px); /* Blur latar belakang */
+      -webkit-backdrop-filter: blur(15px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
       color: #fff;
-      position: relative;
     }
 
     .login-container h2 {
@@ -44,14 +44,18 @@
     .form-control {
       background: transparent;
       border: none;
-      border-bottom: 1.5px solid #ddd;
+      border-bottom: 1.5px solid #ccc;
       border-radius: 0;
       color: #fff;
       padding-left: 0;
     }
 
+    .form-control::placeholder {
+      color: #ccc;
+    }
+
     .form-control:focus {
-      border-color: #fff;
+      border-color: #00dfc4;
       background: transparent;
       box-shadow: none;
     }
@@ -81,7 +85,7 @@
       text-align: center;
       font-size: 50px;
       margin-bottom: 20px;
-      color: #00dfc4;
+      color: #df0000;
     }
 
     .link-text {
@@ -118,7 +122,7 @@
 
     <button type="submit" class="btn btn-login">Login</button>
 
-    <a href="{{ route('password.update') }}" class="link-text">Forgot your password?</a>
+    <a href="{{ route('password.request') }}" class="link-text">Forgot your password?</a>
     <a href="{{ route('register') }}" class="link-text">Don't have an account? Register</a>
   </form>
 
