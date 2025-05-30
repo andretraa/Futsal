@@ -84,4 +84,4 @@ Route::get('/booking/pending/{id}', [App\Http\Controllers\BookingController::cla
     ->name('booking.pending');
 
 Route::resource('schedules', ScheduleController::class);
-Route::get('/schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');
+Route::get('schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');
