@@ -41,63 +41,94 @@ class BookingController extends Controller
     {
         $request->validate([
             'field_id' => 'required|exists:fields,id',
-            'schedule_id' => 'required|exists:schedules,id',
+            'schedule_ids' => 'required|array|min:1', // Array of schedule IDs
+            'schedule_ids.*' => 'exists:schedules,id', // Each schedule ID must exist
             'tanggal_pemesanan' => 'required|date',
-            'total_harga' => 'required',
+            'total_harga' => 'required|numeric',
             'payment_method' => 'required|in:credit_card,bank_transfer,e_wallet,retail',
         ]);
 
-        $schedule = Schedule::findOrFail($request->schedule_id);
+        
+        $schedules = Schedule::whereIn('id', $request->schedule_ids)
+                            ->where('field_id', $request->field_id)
+                            ->where('is_available', true)
+                            ->orderBy('start_time')
+                            ->get();
 
-        if (!$schedule->is_available) {
+        
+        if ($schedules->count() !== count($request->schedule_ids)) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Jadwal ini tidak tersedia untuk booking.'
+                    'message' => 'Beberapa jadwal tidak tersedia atau tidak ditemukan.'
                 ], 422);
             }
-            return redirect()->back()->with('error', 'Jadwal ini tidak tersedia untuk booking.');
+            return redirect()->back()->with('error', 'Beberapa jadwal tidak tersedia atau tidak ditemukan.');
         }
 
-        $start_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->start_time);
-        $end_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->end_time);
+        
+        $bookingDayOfWeek = Carbon::parse($request->tanggal_pemesanan)->locale('id')->dayName;
+        
+        
+        $invalidSchedules = $schedules->filter(function($schedule) use ($bookingDayOfWeek) {
+            return $schedule->day_of_week !== $bookingDayOfWeek;
+        });
 
-        // Periksa apakah jadwal sudah dibooking pada tanggal yang sama dan statusnya bukan 'cancelled'
-        $existingBooking = Booking::where('field_id', $request->field_id)
-            ->where('tanggal_pemesanan', $request->tanggal_pemesanan)
-            ->where(function($query) use ($start_time, $end_time) {
-                $query->where('start_time', '<', $end_time)
-                      ->where('end_time', '>', $start_time);
-            })
-            ->whereIn('status', ['pending', 'confirmed']) // Periksa booking yang masih aktif
-            ->exists();
-
-        if ($existingBooking) {
+        if ($invalidSchedules->count() > 0) {
             if ($request->wantsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Jadwal ini sudah dibooking pada tanggal dan waktu yang dipilih.'
+                    'message' => "Jadwal yang dipilih tidak sesuai dengan hari {$bookingDayOfWeek}."
                 ], 422);
             }
-            return redirect()->back()->with('error', 'Jadwal ini sudah dibooking pada tanggal dan waktu yang dipilih.');
+            return redirect()->back()->with('error', "Jadwal yang dipilih tidak sesuai dengan hari {$bookingDayOfWeek}.");
         }
 
-        // Buat booking terlebih dahulu dengan status pending
+        
+        foreach ($schedules as $schedule) {
+            $start_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->start_time);
+            $end_time = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedule->end_time);
+
+            $existingBooking = Booking::where('field_id', $request->field_id)
+                ->where('tanggal_pemesanan', $request->tanggal_pemesanan)
+                ->where(function($query) use ($start_time, $end_time) {
+                    $query->where('start_time', '<', $end_time)
+                        ->where('end_time', '>', $start_time);
+                })
+                ->whereIn('status', ['pending', 'confirmed']) 
+                ->exists();
+
+            if ($existingBooking) {
+                $timeRange = $schedule->start_time . ' - ' . $schedule->end_time;
+                if ($request->wantsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Jadwal {$timeRange} sudah dibooking pada tanggal yang dipilih."
+                    ], 422);
+                }
+                return redirect()->back()->with('error', "Jadwal {$timeRange} sudah dibooking pada tanggal yang dipilih.");
+            }
+        }
+
+        
+        $earliestStartTime = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedules->min('start_time'));
+        $latestEndTime = Carbon::parse($request->tanggal_pemesanan . ' ' . $schedules->max('end_time'));
+
+        
         $booking = Booking::create([
             'user_id' => Auth::id(),
             'field_id' => $request->field_id,
             'tanggal_pemesanan' => $request->tanggal_pemesanan,
-            'start_time' => $start_time,
-            'end_time' => $end_time,
+            'start_time' => $earliestStartTime,
+            'end_time' => $latestEndTime,
             'status' => 'pending',
             'total_harga' => $request->total_harga,
             'payment_method' => $request->payment_method,
         ]);
-
-        // Generate order ID yang unik
+        
         $orderId = 'ORDER-' . $booking->id . '-' . time();
 
-        // Simpan order_id di tabel payments
+        
         Payment::create([
             'booking_id' => $booking->id,
             'order_id' => $orderId,
@@ -107,13 +138,22 @@ class BookingController extends Controller
             'payment_method' => $request->payment_method
         ]);
 
-        // Return booking ID for the next step
         return response()->json([
             'success' => true,
-            'booking_id' => $booking->id
+            'booking_id' => $booking->id,
+            'message' => 'Booking berhasil dibuat.',
+            'booking_details' => [
+                'tanggal' => $request->tanggal_pemesanan,
+                'waktu_mulai' => $schedules->min('start_time'),
+                'waktu_selesai' => $schedules->max('end_time'),
+                'total_slot' => $schedules->count() . ' jam',
+                'time_slots' => $schedules->pluck('start_time', 'end_time')->map(function($start, $end) {
+                    return $start . ' - ' . $end;
+                })->values()
+            ]
         ]);
     }
-    // Step 2: Create a new function to process payment
+
     public function processPayment($id)
     {
         $booking = Booking::findOrFail($id);
