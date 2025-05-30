@@ -454,10 +454,9 @@
                 success: function(response) {
                     hideLoadingOverlay(); // Sembunyikan loading overlay
                     console.log("Response from server for schedules:", response); 
-                    scheduleSelect.prop('disabled', false); // Aktifkan dropdown kembali
+                    scheduleSelect.prop('disabled', false); 
 
                     if (response.success && response.availableSchedules && response.availableSchedules.length > 0) {
-                        // Clear existing options except the first one
                         scheduleSelect.empty();
                         
                         response.availableSchedules.forEach(schedule => {
@@ -465,7 +464,6 @@
                             const timeText = `${schedule.start_time.substring(0, 5)} - ${schedule.end_time.substring(0, 5)}`;
                     
                     if (schedule.is_booked) {
-                        // Add disabled option for booked schedules
                         scheduleSelect.append(`<option value="${schedule.id}" disabled>${timeText} (Terisi)</option>`);
                     } else {
                         // Add available schedule
