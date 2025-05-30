@@ -66,6 +66,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     
 });
 Route::resource('fields', FrontendFieldController::class);
+Route::get('checkAvailability', [FrontendFieldController::class, 'checkAvailability'])->name('fields.checkAvailability');
 
 Route::get('/admin/bookings/process/{id}', [App\Http\Controllers\BookingController::class, 'processPayment'])
     ->name('admin.bookings.process');
@@ -82,4 +83,5 @@ Route::get('/booking/error/{id}', [App\Http\Controllers\BookingController::class
 Route::get('/booking/pending/{id}', [App\Http\Controllers\BookingController::class, 'pendingPayment'])
     ->name('booking.pending');
 
+Route::resource('schedules', ScheduleController::class);
 Route::get('/schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');

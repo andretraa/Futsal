@@ -265,7 +265,6 @@
                             <div class="mb-3">
                                 <label for="field-id" class="form-label"><i class="fas fa-futbol me-2"></i>Pilih Lapang</label>
                                 <select id="field-id" class="form-select" name="field_id" required>
-                                    <option value="">-- Pilih Lapang --</option>
                                     @foreach ($fields as $data)
                                         <option value="{{ $data->id }}" data-price="{{ $data->harga_perjam }}">{{ $data->nama }}</option>
                                     @endforeach
@@ -401,6 +400,9 @@
             const bookingDate = document.getElementById('booking-date').value;
             const scheduleSelect = document.getElementById('schedule-id');
 
+            console.log("field:", fieldId);
+            console.log("booking_date:", bookingDate);
+            
             // Reset schedule select dan tambahkan opsi default
             scheduleSelect.innerHTML = '<option value="">-- Pilih Jam --</option>';
             scheduleSelect.disabled = true; // Nonaktifkan dropdown saat memuat
@@ -418,7 +420,7 @@
             showLoadingOverlay('Memuat jadwal...');
 
             $.ajax({
-                url: '{{ route("schedules.checkAvailability") }}',
+                url: '{{ route("fields.checkAvailability") }}',
                 method: 'GET',
                 data: {
                     field_id: fieldId,
