@@ -684,8 +684,8 @@ function processBooking() {
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'System Error',
-                    text: 'Terjadi kesalahan sistem! Silakan coba lagi nanti.'
+                    title: 'Login Dahulu',
+                    text: 'Anda Harus Login Terlebih Dahulu Untuk Melakukan Booking.'
                 });
             }
         }

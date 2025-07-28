@@ -21,6 +21,10 @@ class Field extends Model
         return $this->hasMany(Booking::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
     public function schedules()
     {
         return $this->hasMany(Schedule::class);

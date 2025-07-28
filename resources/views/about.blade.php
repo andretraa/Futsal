@@ -32,7 +32,7 @@
                              GOR Bumi Sariwangi 1 adalah fasilitas olahraga yang terletak di dalam Komplek Perumahan Bumi Sariwangi 1, Sariwangi, Parongpong, Kabupaten Bandung Barat. Tempat ini menyediakan berbagai fasilitas olahraga, termasuk lapangan futsal yang dapat digunakan oleh penghuni komplek maupun masyarakat umum.  
                             </p>
                             <p class="text-justify">
-                                Bumi Sariwangi Hall and Sport Centre, yang merupakan bagian dari fasilitas ini, beroperasi setiap hari dari pukul 08.00 hingga 22.00 WIB . Namun, untuk penggunaan lapangan futsal secara spesifik, 
+                                Bumi Sariwangi Hall and Sport Centre, yang merupakan bagian dari fasilitas ini, beroperasi setiap hari dari pukul 08.00 hingga 22.00 WIB. Namun, untuk penggunaan lapangan futsal secara spesifik, 
                                 disarankan untuk menghubungi pengelola terlebih dahulu guna memastikan ketersediaan dan jadwal.
                             </p>
         

@@ -32,7 +32,7 @@
               <table class="table table-bordered table-striped">
                 <thead class="thead-dark">
                   <tr>
-                    <th>#</th>
+                    <th>No</th>
                     <th>Nama Lapangan</th>
                     <th>Harga Perjam</th>
                     <th>Gambar</th>

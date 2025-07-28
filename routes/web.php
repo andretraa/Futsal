@@ -9,6 +9,9 @@ use App\Http\Controllers\ScheduleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Frontend\FieldController as FrontendFieldController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\ProfileController;
+
+
 
 
 Route::get('/', function () {
@@ -85,3 +88,5 @@ Route::get('/booking/pending/{id}', [App\Http\Controllers\BookingController::cla
 
 Route::resource('schedules', ScheduleController::class);
 Route::get('schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');
+
+Route::get('/profile', [ProfileController::class, 'index'])->middleware('auth')->name('profile');

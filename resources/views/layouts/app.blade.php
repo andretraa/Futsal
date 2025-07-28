@@ -54,11 +54,6 @@
           <li class="nav-item">
             <a href="/field" class="nav-link {{ Request::is('field') ? 'active fw-bold text-success' : 'text-white' }}">Field</a>
           </li>
-          @auth
-          <li class="nav-item">
-            <span class="nav-link fw-semibold text-success">{{ auth()->user()->name }}</span>
-          </li>
-          @endauth
         </ul>
       </nav>
   
@@ -68,12 +63,38 @@
       <!-- Auth Buttons -->
       <div class="d-flex align-items-center">
         @auth
-        <form action="{{ route('logout') }}" method="post" class="m-0">
-          @csrf
-          <button type="submit" class="btn btn-outline-light rounded-pill px-4 py-2 ms-3 d-flex align-items-center gap-2">
-            <i class="bi bi-box-arrow-right"></i> Logout
+        <!-- My Account Dropdown -->
+        <div class="dropdown">
+          <button class="btn btn-outline-light rounded-pill px-4 py-2 ms-3 d-flex align-items-center gap-2 dropdown-toggle" 
+                  type="button" 
+                  id="accountDropdown" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false">
+            <i class="bi bi-person-circle"></i> My Account
           </button>
-        </form>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="accountDropdown">
+            <li>
+              <span class="dropdown-item-text fw-semibold text-success">
+                <i class="bi bi-person"></i> {{ auth()->user()->name }}
+              </span>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+                <a class="dropdown-item" href="{{ route('profile') }}">
+                    <i class="bi bi-person-gear"></i> Profile
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form action="{{ route('logout') }}" method="post" class="m-0">
+                @csrf
+                <button type="submit" class="dropdown-item text-danger">
+                  <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
         @endauth
   
         @guest
@@ -86,77 +107,10 @@
     </div>
   </header>
   
-  
-
   <main class="main">
     @yield('content')
   </main>
 
-  {{-- <footer id="footer" class="footer dark-background">
-
-    <div class="container footer-top">
-      <div class="row gy-4">
-        <div class="col-lg-4 col-md-6 footer-about">
-          <a href="index.html" class="logo d-flex align-items-center">
-            <span class="sitename">BSW</span>
-          </a>
-          <div class="footer-contact pt-3">
-            <p>Jalan Sariwangi</p>
-            <p>Komplek Bumi Sariwangi 1, Kecamatan Parongpong</p>
-            <p class="mt-3"><strong>Phone:</strong> <span>+62 87789235490</span></p>
-            <p><strong>Email:</strong> <span>gorbumisariwangi1@gmail.com</span></p>
-          </div>
-          <div class="social-links d-flex mt-4">
-            <a href=""><i class="bi bi-twitter-x"></i></a>
-            <a href=""><i class="bi bi-facebook"></i></a>
-            <a href=""><i class="bi bi-instagram"></i></a>
-            <a href=""><i class="bi bi-linkedin"></i></a>
-          </div>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Useful Links</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Home</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">About us</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Services</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Terms of service</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Privacy policy</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-2 col-md-3 footer-links">
-          <h4>Our Services</h4>
-          <ul>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Design</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Web Development</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Product Management</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Marketing</a></li>
-            <li><i class="bi bi-chevron-right"></i> <a href="#">Graphic Design</a></li>
-          </ul>
-        </div>
-
-        <div class="col-lg-4 col-md-12 footer-newsletter">
-          <h4>Our Newsletter</h4>
-          <p>Subscribe to our newsletter and receive the latest news about our products and services!</p>
-          <form action="forms/newsletter.php" method="post" class="php-email-form">
-            <div class="newsletter-form"><input type="email" name="email"><input type="submit" value="Subscribe"></div>
-            <div class="loading">Loading</div>
-            <div class="error-message"></div>
-            <div class="sent-message">Your subscription request has been sent. Thank you!</div>
-          </form>
-        </div>
-
-      </div>
-    </div>
-
-    <div class="container copyright text-center mt-4">
-
-        Create by <a href="https://bootstrapmade.com/">Andre Tri Rizky</a>
-      </div>
-    </div>
-
-  </footer> --}}
 
   <!-- Scroll Top -->
   <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
@@ -177,6 +131,25 @@
   <script src="assets/js/main.js"></script>
   @stack('scripts')
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Manual dropdown toggle
+    const dropdownToggle = document.getElementById('accountDropdown');
+    const dropdownMenu = dropdownToggle.nextElementSibling;
+    
+    dropdownToggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        dropdownMenu.classList.toggle('show');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!dropdownToggle.contains(e.target) && !dropdownMenu.contains(e.target)) {
+            dropdownMenu.classList.remove('show');
+        }
+    });
+});
+</script>
 </body>
 
 </html>
