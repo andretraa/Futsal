@@ -180,18 +180,6 @@
                                         <h5>{{ $data->nama }}</h5>
                                     </div>
                                 </div>
-                                <div class="carousel-item">
-                                    <img src="{{ asset('assets/img/lapang.jpg') }}" class="d-block w-100" alt="Bumi Sariwangi">
-                                    <div class="carousel-caption">
-                                        <h5>Bumi Sariwangi</h5>
-                                    </div>
-                                </div>
-                                <div class="carousel-item">
-                                    <img src="{{ asset('assets/img/lapang.jpg') }}" class="d-block w-100" alt="Bumi Sariwangi">
-                                    <div class="carousel-caption">
-                                        <h5>Bumi Sariwangi</h5>
-                                    </div>
-                                </div>
                             </div>
                             <button class="carousel-control-prev" type="button" data-bs-target="#fieldCarousel" data-bs-slide="prev">
                                 <span class="carousel-control-prev-icon"></span>
@@ -347,8 +335,6 @@
 @endsection
 
 @push('scripts')
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {{-- jQuery dimuat pertama --}}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script type="text/javascript"
     src="https://app.sandbox.midtrans.com/snap/snap.js"

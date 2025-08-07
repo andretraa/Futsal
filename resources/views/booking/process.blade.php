@@ -140,7 +140,7 @@
                 </div>
                 
                 <div class="text-center mt-4">
-                    <a href="#" class="text-decoration-none text-muted">
+                    <a href="{{ route('fields.index') }}" class="text-decoration-none text-muted">
                         <i class="fas fa-arrow-left me-1"></i> Kembali
                     </a>
                 </div>
