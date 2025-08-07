@@ -30,6 +30,7 @@
                                         <th>Nama</th>
                                         <th>Email</th>
                                         <th style="width: 15%;">Role</th>
+                                        <th style="width: 10%;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -47,6 +48,15 @@
                                                 {{ ucfirst($data->role) }}
                                             </span>
                                         </td>
+                                        <td>
+                                            <form action="{{ route('admin.users.destroy', $data->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus user ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
                                     </tr>
                                     @endforeach
                                 </tbody>
@@ -56,6 +66,8 @@
 
                     <!-- Pagination -->
                     <div class="card-footer bg-white d-flex justify-content-end">
+                        {{-- Pagination jika diperlukan --}}
+                        {{ $users->links() }}
                     </div>
                 </div>
             </div>

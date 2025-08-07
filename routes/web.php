@@ -90,3 +90,4 @@ Route::resource('schedules', ScheduleController::class);
 Route::get('schedules/check-availability', [ScheduleController::class, 'checkAvailability'])->name('schedules.checkAvailability');
 
 Route::get('/profile', [ProfileController::class, 'index'])->middleware('auth')->name('profile');
+Route::delete('/admin/users/{id}', [UserController::class, 'destroy'])->name('admin.users.destroy');

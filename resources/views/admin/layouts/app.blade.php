@@ -74,13 +74,13 @@
 
             <li class="nav-item dropdown user-menu">
               <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown">
-                <img src="{{asset('admin/dist/assets/img/user2-160x160.jpg')}}" class="user-image rounded-circle shadow" alt="User Image" />
-                <span class="d-none d-md-inline">Andre Tri Rizky</span>
+                <img src="{{asset('admin/dist/assets/img/wolvirine.png')}}" class="user-image rounded-circle shadow" alt="User Image" />
+                <span class="d-none d-md-inline">Admin Futsal BSW</span>
               </a>
               <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-end">
                 <li class="user-header text-bg-primary">
-                  <img src="{{asset('admin/dist/assets/img/user2-160x160.jpg')}}" class="rounded-circle shadow" alt="User Image" />
-                  <p>Andre Tri Rizky - Admin Futsal<br /><small>Member since Nov. 2023</small></p>
+                  <img src="{{asset('admin/dist/assets/img/wolvirine.png')}}" class="rounded-circle shadow" alt="User Image" />
+                  <p>Admin Futsal<br /><small>Member since Nov. 2023</small></p>
                 </li>
                 <li class="user-footer d-flex justify-content-between px-3">
                   <a href="#" class="btn btn-default btn-flat">Profile</a>
